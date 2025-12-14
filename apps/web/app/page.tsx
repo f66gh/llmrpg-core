@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Effect, EventDef, GameState, LlmReply, StepResult } from "@llmrpg/core";
 import {
   Engine,
@@ -8,6 +8,7 @@ import {
   buildPrompt,
   buildStateDigest
 } from "@llmrpg/core";
+import { LocalStorageSaveSystem } from "../../../packages/core/src/storage/LocalStorageSaveSystem";
 import eventsJson from "../../../packages/worlds/starfall-city/events.json";
 import world from "../../../packages/worlds/starfall-city/world.json";
 
@@ -31,10 +32,8 @@ const SEED_STEP: StepResult = {
 };
 
 export default function Page() {
-  const engine = useMemo(
-    () => Engine.createFromWorld(initialState, events),
-    []
-  );
+  const engineRef = useRef<Engine>(Engine.createFromWorld(initialState, events));
+  const saveSystemRef = useRef(new LocalStorageSaveSystem("llmrpg"));
 
   const [gameState, setGameState] = useState<GameState>(initialState);
   const [stepResult, setStepResult] = useState<StepResult>(SEED_STEP);
@@ -48,7 +47,7 @@ export default function Page() {
     if (llmMode) {
       await handleLlmChoice(id);
     } else {
-      const res = engine.step({ type: "choice", id });
+      const res = engineRef.current.step({ type: "choice", id });
       setGameState(res.state);
       setStepResult(res);
       setWarnings(res.warnings ?? []);
@@ -102,6 +101,7 @@ export default function Page() {
       const { state: nextState, warnings: effectWarnings } = applyEffects(gameState, effects);
       const allWarnings = [...fetchWarnings, ...(validated.warnings ?? []), ...effectWarnings];
 
+      engineRef.current = Engine.createFromWorld(nextState, events);
       setGameState(nextState);
       setStepResult({
         state: nextState,
@@ -114,6 +114,48 @@ export default function Page() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSave = async () => {
+    try {
+      await saveSystemRef.current.save({ id: "slot-1", state: gameState });
+      setWarnings([]);
+    } catch (err) {
+      console.warn("Save failed", err);
+      setWarnings(["save-failed"]);
+    }
+  };
+
+  const handleLoad = async () => {
+    try {
+      const loaded = await saveSystemRef.current.load("slot-1");
+      if (!loaded) {
+        setWarnings(["no-save-found"]);
+        return;
+      }
+      engineRef.current = Engine.createFromWorld(loaded, events);
+      setGameState(loaded);
+      setStepResult({
+        state: loaded,
+        narrative: "Loaded.",
+        choices: (loaded as any).choices ?? DEFAULT_CHOICES,
+        applied: [],
+        warnings: []
+      });
+      setWarnings([]);
+      setStarted(true);
+    } catch (err) {
+      console.warn("Load failed", err);
+      setWarnings(["load-failed"]);
+    }
+  };
+
+  const handleNewGame = () => {
+    engineRef.current = Engine.createFromWorld(initialState, events);
+    setGameState(initialState);
+    setStepResult(SEED_STEP);
+    setWarnings([]);
+    setStarted(false);
   };
 
   const toggleMode = () => {
@@ -136,6 +178,12 @@ export default function Page() {
               {text}
             </div>
           ))}
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          <button onClick={handleSave}>Save</button>
+          <button onClick={handleLoad}>Load</button>
+          <button onClick={handleNewGame}>New Game</button>
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
