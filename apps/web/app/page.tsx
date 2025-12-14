@@ -2,15 +2,11 @@
 
 import { useMemo, useRef, useState } from "react";
 import type { Effect, EventDef, GameState, LlmReply, StepResult } from "@llmrpg/core";
-import {
-  Engine,
-  applyEffects,
-  buildPrompt,
-  buildStateDigest
-} from "@llmrpg/core";
+import { Engine, applyEffects, buildPrompt, buildStateDigest } from "@llmrpg/core";
 import { LocalStorageSaveSystem } from "../../../packages/core/src/storage/LocalStorageSaveSystem";
 import eventsJson from "../../../packages/worlds/starfall-city/events.json";
 import world from "../../../packages/worlds/starfall-city/world.json";
+import { createAppPluginManager, getUiPlugins } from "../src/plugins";
 
 const worldSummary = world.summary ?? world.name ?? "World";
 const initialState = world.initialState as GameState;
@@ -34,6 +30,7 @@ const SEED_STEP: StepResult = {
 export default function Page() {
   const engineRef = useRef<Engine>(Engine.createFromWorld(initialState, events));
   const saveSystemRef = useRef(new LocalStorageSaveSystem("llmrpg"));
+  const pluginManagerRef = useRef(createAppPluginManager());
 
   const [gameState, setGameState] = useState<GameState>(initialState);
   const [stepResult, setStepResult] = useState<StepResult>(SEED_STEP);
@@ -48,8 +45,9 @@ export default function Page() {
       await handleLlmChoice(id);
     } else {
       const res = engineRef.current.step({ type: "choice", id });
-      setGameState(res.state);
-      setStepResult(res);
+      const pluginState = pluginManagerRef.current?.applyPlugins(res.state) ?? res.state;
+      setGameState(pluginState);
+      setStepResult({ ...res, state: pluginState });
       setWarnings(res.warnings ?? []);
     }
   };
@@ -99,12 +97,13 @@ export default function Page() {
       }
 
       const { state: nextState, warnings: effectWarnings } = applyEffects(gameState, effects);
+      const pluginState = pluginManagerRef.current?.applyPlugins(nextState) ?? nextState;
       const allWarnings = [...fetchWarnings, ...(validated.warnings ?? []), ...effectWarnings];
 
-      engineRef.current = Engine.createFromWorld(nextState, events);
-      setGameState(nextState);
+      engineRef.current = Engine.createFromWorld(pluginState, events);
+      setGameState(pluginState);
       setStepResult({
-        state: nextState,
+        state: pluginState,
         narrative: validated.narrative,
         choices: validated.choices,
         applied: effects,
@@ -133,10 +132,11 @@ export default function Page() {
         setWarnings(["no-save-found"]);
         return;
       }
-      engineRef.current = Engine.createFromWorld(loaded, events);
-      setGameState(loaded);
+      const pluginState = pluginManagerRef.current?.applyPlugins(loaded) ?? loaded;
+      engineRef.current = Engine.createFromWorld(pluginState, events);
+      setGameState(pluginState);
       setStepResult({
-        state: loaded,
+        state: pluginState,
         narrative: "Loaded.",
         choices: (loaded as any).choices ?? DEFAULT_CHOICES,
         applied: [],
@@ -152,8 +152,9 @@ export default function Page() {
 
   const handleNewGame = () => {
     engineRef.current = Engine.createFromWorld(initialState, events);
-    setGameState(initialState);
-    setStepResult(SEED_STEP);
+    const pluginState = pluginManagerRef.current?.applyPlugins(initialState) ?? initialState;
+    setGameState(pluginState);
+    setStepResult({ ...SEED_STEP, state: pluginState });
     setWarnings([]);
     setStarted(false);
   };
@@ -161,6 +162,8 @@ export default function Page() {
   const toggleMode = () => {
     setLlmMode((prev) => !prev);
   };
+
+  const uiPlugins = useMemo(() => getUiPlugins(), []);
 
   return (
     <main style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, padding: 16 }}>
@@ -232,6 +235,9 @@ export default function Page() {
             ))}
           </div>
         )}
+        {uiPlugins.map((plugin) => (
+          <div key={plugin.id}>{plugin.render(gameState)}</div>
+        ))}
       </aside>
     </main>
   );
