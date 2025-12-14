@@ -1,15 +1,8 @@
-export * from "./engine/Engine";
-export * from "./engine/StateStore";
-export * from "./engine/RulesEngine";
-export * from "./engine/EventRunner";
-export * from "./engine/Patch";
+export * from "./engine";
 
-export * from "./llm/Provider";
-export * from "./llm/PromptPacker";
-export * from "./llm/Memory";
+export * from "./llm";
 
-export * from "./schema/game";
-export * from "./schema/world";
+export * from "./schema";
 
-// ✅ 只导出 SaveSystem 抽象，不导出 node/browser adapters
+// Export SaveSystem abstraction only; adapters stay runtime-specific.
 export * from "./storage/SaveSystem";
