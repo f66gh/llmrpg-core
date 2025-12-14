@@ -1,0 +1,6 @@
+{
+  "id": "starfall-city",
+  "name": "Starfall City",
+  "summary": "A neon skyline built atop an ancient crater.",
+  "events": ["arrival", "alley-encounter"]
+}

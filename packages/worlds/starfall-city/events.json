@@ -1,0 +1,10 @@
+[
+  {
+    "id": "arrival",
+    "description": "You arrive at the shimmering gates of Starfall City."
+  },
+  {
+    "id": "alley-encounter",
+    "description": "A shadowy figure beckons you into a narrow alley."
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "name": "llmrpg-core",
+  "private": true,
+  "type": "module",
+  "description": "A lightweight, extensible LLM-driven text RPG framework inspired by JRPG systems and worldbook-based narrative design.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm -w @llmrpg/web run dev",
+    "build": "npm -w @llmrpg/core run build",
+    "build:web": "npm -w @llmrpg/web run build",
+    "build:all": "npm -w @llmrpg/core run build && npm -w @llmrpg/web run build"
+  },
+  "license": "UNLICENSED"
+}
