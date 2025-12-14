@@ -1,10 +1,30 @@
 [
   {
     "id": "arrival",
-    "description": "You arrive at the shimmering gates of Starfall City."
+    "when": { "lacksTags": ["arrived"] },
+    "title": "Arrival",
+    "narrative": "You arrive at the shimmering gates of Starfall City.",
+    "choices": [
+      { "id": "A", "text": "Step through the gate", "effects": [{ "op": "addTag", "tag": "arrived" }] },
+      { "id": "B", "text": "Observe the crowd", "effects": [{ "op": "pushLog", "entry": "You scan the crowd." }] },
+      { "id": "C", "text": "Check equipment", "effects": [{ "op": "pushLog", "entry": "Systems nominal." }] },
+      { "id": "D", "text": "Rest briefly", "effects": [{ "op": "inc", "path": "meters.energy", "amount": 1 }] }
+    ],
+    "weight": 2
   },
   {
     "id": "alley-encounter",
-    "description": "A shadowy figure beckons you into a narrow alley."
+    "title": "Alley Encounter",
+    "when": {
+      "hasTags": ["arrived"]
+    },
+    "narrative": "A shadowy figure beckons you into a narrow alley.",
+    "choices": [
+      { "id": "A", "text": "Follow the figure", "effects": [{ "op": "addTag", "tag": "contacted" }] },
+      { "id": "B", "text": "Refuse and stay alert", "effects": [{ "op": "pushLog", "entry": "You remain cautious." }] },
+      { "id": "C", "text": "Ask for information", "effects": [{ "op": "pushLog", "entry": "They whisper a warning." }] },
+      { "id": "D", "text": "Leave the area", "effects": [{ "op": "moveLocation", "zone": "arrival-district", "place": "tram-stop" }] }
+    ],
+    "weight": 1
   }
 ]

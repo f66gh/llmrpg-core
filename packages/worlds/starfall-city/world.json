@@ -2,5 +2,15 @@
   "id": "starfall-city",
   "name": "Starfall City",
   "summary": "A neon skyline built atop an ancient crater.",
-  "events": ["arrival", "alley-encounter"]
+  "events": ["arrival", "alley-encounter"],
+  "initialState": {
+    "meta": { "version": "0.1.0", "seed": 1, "phase": "story", "turn": 0 },
+    "time": { "day": 1, "slot": "morning" },
+    "location": { "zone": "arrival-district", "place": "gate" },
+    "meters": { "energy": 10 },
+    "tags": [],
+    "inventory": [],
+    "flags": {},
+    "log": ["Booted."]
+  }
 }

@@ -1,21 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { GameState, StepResult } from "@llmrpg/core";
+import type { EventDef, GameState, StepResult } from "@llmrpg/core";
 import { Engine } from "@llmrpg/core";
+import eventsJson from "../../../packages/worlds/starfall-city/events.json";
+import world from "../../../packages/worlds/starfall-city/world.json";
 
-const INITIAL_STATE: GameState = {
-  meta: { version: "0.1.0", seed: 1, phase: "story", turn: 0 },
-  time: { day: 1, slot: "morning" },
-  location: { zone: "boot", place: "landing" },
-  meters: { energy: 10 },
-  tags: [],
-  inventory: [],
-  flags: {},
-  log: ["Booted."]
-};
+const initialState = world.initialState as GameState;
 
-const SEED_CHOICES: StepResult["choices"] = [
+const DEFAULT_CHOICES: StepResult["choices"] = [
   { id: "A", text: "Choice A" },
   { id: "B", text: "Choice B" },
   { id: "C", text: "Choice C" },
@@ -23,23 +16,28 @@ const SEED_CHOICES: StepResult["choices"] = [
 ];
 
 const SEED_STEP: StepResult = {
-  state: INITIAL_STATE,
-  narrative: "",
-  choices: SEED_CHOICES,
+  state: initialState,
+  narrative: "Booted.",
+  choices: DEFAULT_CHOICES,
   applied: [],
   warnings: []
 };
 
 export default function Page() {
-  const engine = useMemo(() => Engine.createDemo(INITIAL_STATE), []);
+  const engine = useMemo(
+    () => Engine.createFromWorld(initialState, eventsJson as EventDef[]),
+    []
+  );
 
-  const [gameState, setGameState] = useState<GameState>(INITIAL_STATE);
+  const [gameState, setGameState] = useState<GameState>(initialState);
   const [stepResult, setStepResult] = useState<StepResult>(SEED_STEP);
+  const [started, setStarted] = useState(false);
 
   const onChoose = (id: StepResult["choices"][number]["id"]) => {
     const res = engine.step({ type: "choice", id });
     setGameState(res.state);
     setStepResult(res);
+    setStarted(true);
   };
 
   return (
@@ -56,11 +54,15 @@ export default function Page() {
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-          {stepResult.choices.map((choice) => (
-            <button key={choice.id} onClick={() => onChoose(choice.id)}>
-              {choice.text}
-            </button>
-          ))}
+          {!started ? (
+            <button onClick={() => onChoose("A")}>Start</button>
+          ) : (
+            stepResult.choices.map((choice) => (
+              <button key={choice.id} onClick={() => onChoose(choice.id)}>
+                {choice.text}
+              </button>
+            ))
+          )}
         </div>
       </section>
 
