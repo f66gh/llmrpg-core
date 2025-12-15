@@ -22,6 +22,9 @@ export type EventDef = {
   title?: string;
   when?: EventCondition;
   narrative: string;
-  choices: EventChoiceDef[];
+  choices?: EventChoiceDef[];
   weight?: number;
+  promptSeed?: string;
+  actionHints?: string[];
+  effectBudget?: number;
 };

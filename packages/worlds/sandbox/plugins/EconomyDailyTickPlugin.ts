@@ -18,6 +18,7 @@ export const createEconomyDailyTickHook = (
 
     if (prev === wrapSlot.from && now === wrapSlot.to) {
       effects.push({ op: "inc", path: "meters.money", amount: -dailyCost });
+      effects.push({ op: "inc", path: "meters.stress", amount: 1 });
       effects.push({
         op: "pushLog",
         entry: `Daily cost ${-dailyCost >= 0 ? "-" : ""}${dailyCost}`

@@ -13,17 +13,30 @@ export class EventDirector {
     return this.cfg.events.find((event) => event.id === id) ?? null;
   }
 
-  pickEvent(state: GameState): EventDef | null {
-    // Deterministic: return the first event that matches conditions.
+  listEligible(state: GameState): EventDef[] {
+    const eligible: EventDef[] = [];
     for (const event of this.cfg.events) {
       if (this.matches(event, state)) {
-        return event;
+        eligible.push(event);
       }
     }
-    return null;
+    return eligible;
+  }
+
+  pickEvent(state: GameState): EventDef | null {
+    // Deterministic: return the first event that matches conditions.
+    return this.listEligible(state)[0] ?? null;
   }
 
   getChoices(event: EventDef): Choice[] {
+    if (!event.choices || event.choices.length === 0) {
+      return [
+        { id: "A", text: "继续" },
+        { id: "B", text: "等待" },
+        { id: "C", text: "思考" },
+        { id: "D", text: "休息" }
+      ];
+    }
     return event.choices.map((choice) => ({
       id: choice.id,
       text: choice.text

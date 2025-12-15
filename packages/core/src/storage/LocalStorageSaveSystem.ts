@@ -1,4 +1,5 @@
 import type { GameState } from "../schema/game";
+import { ensureMemory } from "../schema/game";
 import type { SaveSlot } from "./SaveSystem";
 import { SaveSystem } from "./SaveSystem";
 
@@ -28,7 +29,9 @@ export class LocalStorageSaveSystem extends SaveSystem<GameState> {
   async load(id: string): Promise<GameState | null> {
     try {
       const raw = localStorage.getItem(this.key(id));
-      return raw ? (JSON.parse(raw) as GameState) : null;
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as GameState;
+      return ensureMemory(parsed);
     } catch (err) {
       console.warn("LocalStorageSaveSystem.load failed", err);
       throw err;
@@ -45,7 +48,8 @@ export class LocalStorageSaveSystem extends SaveSystem<GameState> {
         const raw = localStorage.getItem(key);
         if (!raw) continue;
         try {
-          slots.push({ id, state: JSON.parse(raw) as GameState });
+          const parsed = JSON.parse(raw) as GameState;
+          slots.push({ id, state: ensureMemory(parsed) });
         } catch (err) {
           console.warn("LocalStorageSaveSystem.list parse failed", err);
         }

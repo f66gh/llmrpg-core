@@ -13,6 +13,10 @@ const DebugHUD: React.FC<DebugHUDProps> = ({ state, stepResult }) => {
   const [logCount, setLogCount] = useState<number>(LOG_COUNTS[LOG_COUNTS.length - 1]);
   const effects = stepResult?.applied ?? [];
   const debug = stepResult?.debug ?? [];
+  const promptInfo = debug.find((d) => typeof d === "string" && d.startsWith("promptChars:"));
+  const promptChars = promptInfo ? promptInfo.split(":")[1] : undefined;
+  const effectProposalInfo = debug.find((d) => typeof d === "string" && d.startsWith("effectProposal:"));
+  const summaryUpdated = debug.some((d) => typeof d === "string" && d === "summary-updated");
 
   const recentLogs = useMemo(() => {
     if (!Array.isArray(state.log)) return [];
@@ -33,6 +37,20 @@ const DebugHUD: React.FC<DebugHUDProps> = ({ state, stepResult }) => {
       <div>eventId: {state.flags.__lastEventId ?? "n/a"}</div>
       <div>pending: {state.flags.__pendingEventId ?? "n/a"}</div>
       <div>branch: {(stepResult?.choices ?? []).map((c) => c.id).join(",") || "n/a"}</div>
+      <div>prompt size: {promptChars ?? "n/a"}</div>
+      <div>memory summary chars: {state.memory?.summary?.length ?? 0}</div>
+      <div>recentTurns count: {state.memory?.recentTurns?.length ?? 0}</div>
+      <div>summary updated: {summaryUpdated ? "yes" : "no"}</div>
+      <div>effect proposal: {effectProposalInfo ? effectProposalInfo.split(":")[1] : "unknown"}</div>
+      <div style={{ wordBreak: "break-all" }}>
+        llmProposedEffects: {stepResult?.llmProposedEffects ? JSON.stringify(stepResult.llmProposedEffects) : "[]"}
+      </div>
+      <div style={{ wordBreak: "break-all" }}>
+        acceptedEffects: {stepResult?.acceptedEffects ? JSON.stringify(stepResult.acceptedEffects) : "[]"}
+      </div>
+      <div style={{ wordBreak: "break-all" }}>
+        rejectedEffects: {stepResult?.rejectedEffects ? JSON.stringify(stepResult.rejectedEffects) : "[]"}
+      </div>
       <div style={{ wordBreak: "break-all" }}>
         appliedEffects: {effects.length > 0 ? JSON.stringify(effects) : "[]"}
       </div>

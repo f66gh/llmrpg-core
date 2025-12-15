@@ -11,7 +11,8 @@ llmrpg-core/
 |   `-- web/                        - Next.js 前端客户端
 |       |-- app/                    - 应用入口与路由
 |       |   |-- api/
-|       |   |   `-- llm/route.ts    - LLM 代理接口
+|       |   |   |-- llm/route.ts            - LLM 叙事改写接口
+|       |   |   `-- llm/encounter/route.ts  - LLM 随机事件接口
 |       |   |-- layout.tsx          - 前端布局
 |       |   `-- page.tsx            - 游戏 UI 入口（加载 world + hooks + UI 插件）
 |       |-- components/             - 通用 UI 组件
@@ -24,6 +25,9 @@ llmrpg-core/
 |       |   |   |-- HealthBarPlugin.tsx
 |       |   |   |-- ScoreBoardPlugin.tsx
 |       |   |   `-- pluginManager.ts
+|       |   |-- lib/                - 前端 LLM/事件辅助
+|       |   |   |-- encounter.ts            - LLM 随机事件生成（前端调用）
+|       |   |   `-- narration.ts           - 叙事改写调用/fallback
 |       |   `-- worlds/             - 前端 world loader（选择世界、绑定 hooks/UI 插件）
 |       |       `-- index.ts
 |       |-- worlds/                 - 旧的前端 world 目录（可移除或留空）
@@ -37,6 +41,10 @@ llmrpg-core/
 |   |   |-- src/
 |   |   |   |-- engine/             - 状态推进、事件执行、规则引擎
 |   |   |   |-- llm/                - LLM 提示构建、记忆、摘要
+|   |   |   |   |-- adHocEvent.ts           - LLM 临时事件结构与校验
+|   |   |   |   |-- narrator.ts             - 文本改写输入/输出/守卫
+|   |   |   |   |-- promptBuilder.ts        - 叙事/事件等提示构建
+|   |   |   |   |-- randomEncounterPrompt.ts- 随机遭遇提示构建
 |   |   |   |-- plugins/            - 引擎插件接口与插件管理
 |   |   |   |-- schema/             - 类型定义（游戏/事件/效果/LLM）
 |   |   |   `-- storage/            - 存档接口与浏览器/Node 适配器

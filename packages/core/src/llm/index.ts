@@ -3,3 +3,7 @@ export * from "./PromptPacker";
 export * from "./Memory";
 export * from "./stateDigest";
 export * from "./promptBuilder";
+export * from "./narrator";
+export * from "./adHocEvent";
+export * from "./randomEncounterPrompt";
+export * from "./envelopeAdapters";
