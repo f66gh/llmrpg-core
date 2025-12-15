@@ -1,9 +1,9 @@
-import type { GameState } from "@llmrpg/core";
+import type { GameState, StepResult } from "@llmrpg/core";
 import type { UIPlugin } from "./UIPlugin";
 
 export const ScoreBoardPlugin: UIPlugin = {
   id: "score-board",
-  render(state: GameState) {
+  render(state: GameState, _stepResult?: StepResult) {
     const score = (state as any).meters?.score ?? (state as any).score ?? 0;
     const credits = (state as any).meters?.credits ?? (state as any).credits ?? state.flags?.credits ?? 0;
 

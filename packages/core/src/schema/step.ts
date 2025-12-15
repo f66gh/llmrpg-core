@@ -19,4 +19,5 @@ export type StepResult = {
   choices: Choice[];
   applied: Effect[];
   warnings: string[];
+  debug?: string[];
 };

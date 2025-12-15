@@ -2,5 +2,16 @@
   "name": "@llmrpg/worlds",
   "version": "0.0.1",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "types": "./types.d.ts",
+  "dependencies": {
+    "@llmrpg/core": "workspace:*"
+  },
+  "exports": {
+    "./sandbox": "./sandbox/index.ts",
+    "./sandbox/events": "./sandbox/events/index.ts",
+    "./sandbox/world.json": "./sandbox/world.json",
+    "./starfall-city/world.json": "./starfall-city/world.json",
+    "./starfall-city/events.json": "./starfall-city/events.json"
+  }
 }

@@ -14,27 +14,13 @@ export class EventDirector {
   }
 
   pickEvent(state: GameState): EventDef | null {
-    const eligible = this.cfg.events.filter((event) =>
-      this.matches(event, state)
-    );
-
-    if (eligible.length === 0) {
-      return null;
-    }
-
-    let best = eligible[0];
-    let bestWeight = best.weight ?? 1;
-
-    for (let i = 1; i < eligible.length; i += 1) {
-      const candidate = eligible[i];
-      const weight = candidate.weight ?? 1;
-      if (weight > bestWeight) {
-        best = candidate;
-        bestWeight = weight;
+    // Deterministic: return the first event that matches conditions.
+    for (const event of this.cfg.events) {
+      if (this.matches(event, state)) {
+        return event;
       }
     }
-
-    return best;
+    return null;
   }
 
   getChoices(event: EventDef): Choice[] {

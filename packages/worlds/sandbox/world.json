@@ -1,0 +1,16 @@
+{
+  "id": "sandbox",
+  "name": "Sandbox",
+  "summary": "Minimal test world for engine closed-loop validation.",
+  "events": ["quiet-morning", "street-chatter", "debt-notice", "found-coin", "midnight-settlement"],
+  "initialState": {
+    "meta": { "version": "0.1.0", "seed": 42, "phase": "story", "turn": 0 },
+    "time": { "day": 1, "slot": "morning" },
+    "location": { "zone": "sandbox", "place": "home" },
+    "meters": { "money": 0, "energy": 5, "stress": 0 },
+    "tags": [],
+    "inventory": [],
+    "flags": {},
+    "log": []
+  }
+}

@@ -1,7 +1,7 @@
-import type { GameState } from "@llmrpg/core";
+import type { GameState, StepResult } from "@llmrpg/core";
 import type { ReactElement } from "react";
 
 export interface UIPlugin {
   id: string;
-  render(state: GameState): ReactElement | null;
+  render(state: GameState, stepResult?: StepResult): ReactElement | null;
 }

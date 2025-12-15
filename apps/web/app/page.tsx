@@ -4,13 +4,14 @@ import { useMemo, useRef, useState } from "react";
 import type { Effect, EventDef, GameState, LlmReply, StepResult } from "@llmrpg/core";
 import { Engine, applyEffects, buildPrompt, buildStateDigest } from "@llmrpg/core";
 import { LocalStorageSaveSystem } from "../../../packages/core/src/storage/LocalStorageSaveSystem";
-import eventsJson from "../../../packages/worlds/starfall-city/events.json";
-import world from "../../../packages/worlds/starfall-city/world.json";
 import { createAppPluginManager, getUiPlugins } from "../src/plugins";
+import { loadWorld } from "../src/worlds";
 
+const { world, events, hooks } = loadWorld("sandbox");
 const worldSummary = world.summary ?? world.name ?? "World";
 const initialState = world.initialState as GameState;
-const events = eventsJson as EventDef[];
+const eventList = events as EventDef[];
+const uiPluginsFromWorld = loadWorld("sandbox").uiPlugins ?? [];
 
 const DEFAULT_CHOICES: StepResult["choices"] = [
   { id: "A", text: "Choice A" },
@@ -28,7 +29,12 @@ const SEED_STEP: StepResult = {
 };
 
 export default function Page() {
-  const engineRef = useRef<Engine>(Engine.createFromWorld(initialState, events));
+  const engineRef = useRef<Engine>(
+    Engine.createFromWorld(initialState, eventList, {
+      beforeStepHooks: hooks?.beforeStep,
+      afterStepHooks: hooks?.afterStep
+    })
+  );
   const saveSystemRef = useRef(new LocalStorageSaveSystem("llmrpg"));
   const pluginManagerRef = useRef(createAppPluginManager());
 
@@ -100,7 +106,7 @@ export default function Page() {
       const pluginState = pluginManagerRef.current?.applyPlugins(nextState) ?? nextState;
       const allWarnings = [...fetchWarnings, ...(validated.warnings ?? []), ...effectWarnings];
 
-      engineRef.current = Engine.createFromWorld(pluginState, events);
+      engineRef.current = Engine.createFromWorld(pluginState, eventList);
       setGameState(pluginState);
       setStepResult({
         state: pluginState,
@@ -133,7 +139,10 @@ export default function Page() {
         return;
       }
       const pluginState = pluginManagerRef.current?.applyPlugins(loaded) ?? loaded;
-      engineRef.current = Engine.createFromWorld(pluginState, events);
+      engineRef.current = Engine.createFromWorld(pluginState, eventList, {
+        beforeStepHooks: hooks?.beforeStep,
+        afterStepHooks: hooks?.afterStep
+      });
       setGameState(pluginState);
       setStepResult({
         state: pluginState,
@@ -151,7 +160,10 @@ export default function Page() {
   };
 
   const handleNewGame = () => {
-    engineRef.current = Engine.createFromWorld(initialState, events);
+    engineRef.current = Engine.createFromWorld(initialState, eventList, {
+      beforeStepHooks: hooks?.beforeStep,
+      afterStepHooks: hooks?.afterStep
+    });
     const pluginState = pluginManagerRef.current?.applyPlugins(initialState) ?? initialState;
     setGameState(pluginState);
     setStepResult({ ...SEED_STEP, state: pluginState });
@@ -163,11 +175,11 @@ export default function Page() {
     setLlmMode((prev) => !prev);
   };
 
-  const uiPlugins = useMemo(() => getUiPlugins(), []);
+  const uiPlugins = useMemo(() => uiPluginsFromWorld.length > 0 ? uiPluginsFromWorld : getUiPlugins(), [uiPluginsFromWorld]);
 
   return (
-    <main style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16, padding: 16 }}>
-      <section style={{ border: "1px solid #333", borderRadius: 12, padding: 12, minHeight: 400 }}>
+    <main style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 16, padding: 16, height: "100vh", boxSizing: "border-box" }}>
+      <section style={{ border: "1px solid #333", borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", height: "100%" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h1 style={{ fontSize: 18, marginBottom: 12 }}>Story</h1>
           <button onClick={toggleMode} style={{ marginLeft: 8 }}>
@@ -175,12 +187,18 @@ export default function Page() {
           </button>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {gameState.log.map((text, i) => (
-            <div key={i} style={{ lineHeight: 1.5 }}>
-              {text}
+        <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+          <div style={{ lineHeight: 1.5, marginBottom: 12 }}>
+            {stepResult.narrative}
+          </div>
+          {warnings.length > 0 && (
+            <div style={{ color: "#d97757" }}>
+              <div style={{ fontWeight: 600 }}>Warnings:</div>
+              {warnings.map((w, i) => (
+                <div key={i}>{w}</div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
@@ -189,7 +207,7 @@ export default function Page() {
           <button onClick={handleNewGame}>New Game</button>
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", position: "sticky", bottom: 0, paddingTop: 8, background: "#fff" }}>
           {!started ? (
             <button onClick={() => onChoose("A")}>Start</button>
           ) : (
@@ -204,18 +222,9 @@ export default function Page() {
             ))
           )}
         </div>
-
-        {warnings.length > 0 && (
-          <div style={{ marginTop: 12, color: "#d97757" }}>
-            <div style={{ fontWeight: 600 }}>Warnings:</div>
-            {warnings.map((w, i) => (
-              <div key={i}>{w}</div>
-            ))}
-          </div>
-        )}
       </section>
 
-      <aside style={{ border: "1px solid #333", borderRadius: 12, padding: 12 }}>
+      <aside style={{ border: "1px solid #333", borderRadius: 12, padding: 12, overflowY: "auto", height: "100%" }}>
         <h2 style={{ fontSize: 16, marginBottom: 8 }}>HUD</h2>
         <div>turn: {String(gameState.meta.turn)}</div>
         <div>phase: {gameState.meta.phase}</div>
@@ -236,7 +245,7 @@ export default function Page() {
           </div>
         )}
         {uiPlugins.map((plugin) => (
-          <div key={plugin.id}>{plugin.render(gameState)}</div>
+          <div key={plugin.id}>{plugin.render(gameState, stepResult)}</div>
         ))}
       </aside>
     </main>
